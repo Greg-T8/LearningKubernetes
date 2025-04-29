@@ -44,14 +44,27 @@ See [here](https://github.com/kubernetes/community/blob/master/contributors/deve
 
 #### Containers are Ephemeral
 
-- "Ephemeral" means that something exists for a short period.
-- Containers can be terminated or restarted without any user involvement or consequences.
-- Any changes made to a running container are written to a temporary layer, called the **container layer**, which is a directory on the localhost filesystem.
-- Docker uses a **storage driver**, which manages request to use the container layer.
-- The container layer is tied to the cotainer ID and remains on the host system until the container is removed.
+- Containers exist temporarily and can be terminated/restarted without consequences
+- Changes to running containers are written to a temporary **container layer** (directory on host filesystem)
+- Docker uses a **storage driver** to manage this container layer
+- The container layer persists until the container is removed
 
-Given that containers are temporary and read only, how is it possible to modify data within a container?
+Despite containers being temporary and read-only, data modification is possible through:
+- **Image layering** - interconnected layers functioning as a filesystem
+- This architecture allows changes while keeping the underlying image immutable
 
-- Docker uses **image layering**, which creates interconnected layers that collectively function as a filesystem.
-- This allows changes to be made to the container's data even though the underlying image remains immutable.
+#### Docker Images
 
+- Docker images consist of multiple layers with associated metadata JSON files
+
+See [Docker Image Specification](https://github.com/moby/docker-image-spec/blob/main/spec.md)
+
+A container runs with a **container layer** atop the base **image layer**.
+
+![Docker Image Layers](./images/20250429-DockerImageLayers.svg)
+
+Data added to containers stays in the temporary container layer while the container runs.
+
+**File Handling in Layered Systems**
+- Docker uses **copy-on-write**: files aren't duplicated in higher layers if they exist in lower layers
+- When a file needs modification, the new version is stored in the container's temporary layer

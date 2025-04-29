@@ -1,0 +1,40 @@
+<mxfile host="65bd71144e">
+    <diagram id="kb3w_NukyVuOyqDOtEw3" name="Docker Image Layers">
+        <mxGraphModel dx="1360" dy="617" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Temporary Container Layer" style="whiteSpace=wrap;html=1;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,transparent);" parent="1" vertex="1">
+                    <mxGeometry x="482" y="77" width="317" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="whiteSpace=wrap;html=1;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,transparent);arcSize=0;" parent="1" vertex="1">
+                    <mxGeometry x="272" y="187" width="693" height="338" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="whiteSpace=wrap;html=1;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,transparent);arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="434" y="225" width="452" height="259" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="Image Layer 2" style="whiteSpace=wrap;html=1;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,transparent);" parent="1" vertex="1">
+                    <mxGeometry x="572" y="261" width="261" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="Image Layer 1" style="whiteSpace=wrap;html=1;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,transparent);" parent="1" vertex="1">
+                    <mxGeometry x="572" y="369" width="261" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="Read Only" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);" parent="1" vertex="1">
+                    <mxGeometry x="470" y="323.9967297363281" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="Container&lt;br&gt;Image&lt;br&gt;Layers" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);" parent="1" vertex="1">
+                    <mxGeometry x="328" y="323.9967297363281" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.6;dx=40;direction=north;notch=0;rounded=1;strokeColor=light-dark(#000000,#5881BA);strokeWidth=2;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);fillColor=light-dark(#2B5CA8,#2B5CA8);" vertex="1" parent="1">
+                    <mxGeometry x="605.5" y="143" width="70" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="Read/Write" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);" vertex="1" parent="1">
+                    <mxGeometry x="856.003251953125" y="89.00004272460937" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="NGINX Image" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Shantell Sans;fontSource=https://fonts.googleapis.com/css?family=Shantell+Sans;fontSize=18;fontColor=light-dark(#000000, #b8b8ba);" vertex="1" parent="1">
+                    <mxGeometry x="557" y="492" width="148.33" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
