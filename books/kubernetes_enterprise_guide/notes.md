@@ -117,4 +117,34 @@ docker ps -a
 ```
 <img src="images/1746440250031.png" alt="Docker CLI" width="850"/>
 
+Docker exit codes:
+
+| Exit Code | Description                                                                           |
+| --------- | ------------------------------------------------------------------------------------- |
+| 0         | The command was executed successfully without any issues.                             |
+| 1         | The command failed due to an unexpected error.                                        |
+| 2         | The command was unable to find the specified resource or encountered a similar issue. |
+| 125       | The command failed due to a Docker-related error.                                     |
+| 126       | The command failed because the Docker binary or script could not be executed.         |
+| 127       | The command failed because the Docker binary or script could not be found.            |
+| 128+      | The command failed due to a specific Docker-related error or exception.               |
+
+#### `docker start` and `docker stop`
+
+Run `docker start <container_id/name>` to start a stopped container.
+
+<img src="images/1746440521691.png" alt="Docker CLI" width="850"/>
+
+#### `docker attach`
+
+Run `docker attach <container_id/name>` to attach to a running container. 
+
+When running docker attach, it's likely you will see a blank screen. This is because the container is running in the background and not producing any output.
+
+When you attach, you will only be able to interact with the running process, and the only output you will see is being sent to standard output.
+
+Be careful when using `docker attach` as it can cause issues with the running process. For example, if you run `CTRL+C`, it will stop the process and exit the container. To exit from an attached container without stopping it, use `CTRL+P` and then `CTRL+Q`. This will detach you from the container and leave it running in the background.
+
+**Note:** As of 5/2025, issuing `CTRL+P` and then `CTRL+Q` does not work when running the command in WSL. For whatever reason, `CTRL+Q` doesn't get recognized. 
+
 
