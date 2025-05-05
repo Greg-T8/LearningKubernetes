@@ -68,3 +68,53 @@ Data added to containers stays in the temporary container layer while the contai
 **File Handling in Layered Systems**
 - Docker uses **copy-on-write**: files aren't duplicated in higher layers if they exist in lower layers
 - When a file needs modification, the new version is stored in the container's temporary layer
+
+#### Persistent data
+
+Data persistence is achieved by incoporating a Docker volume, which allows data to be stored outside the container, enabling it to persist even if the container is removed.
+
+#### Accessing services running in containers
+
+Containers do not connect to a network directly. Instead, containers talk through the Docker host system using a bridge *network address translation (NAT)*.
+
+This means you must expose ports for each container to allow access to the services running inside the container.
+
+On a Linux-based system, `iptables` has rules to forward traffic to the Docker daemon. Docker manages these rules for you.
+
+What is `iptables`? `iptables` is used to manage network traffic and keep it secure within a cluster.
+
+
+### Using the Docker CLI
+
+#### `docker run`
+
+```bash
+docker run -d bitnami/nginx:latest
+```
+- `-d` runs the container in detached mode
+
+<img src="images/1746439957955.png" alt="Docker CLI" width="550"/>
+
+Containers will have a random name. Specify the `--name` option to give a container a specific name.
+
+```bash
+docker run -d --name my-nginx bitnami/nginx:latest
+```
+
+#### `docker ps`
+
+List all running containers:
+
+```bash
+docker ps
+```
+<img src="images/1746440094410.png" alt="Docker CLI" width="850"/>
+
+View status of all containers (running and stopped):
+
+```bash
+docker ps -a
+```
+<img src="images/1746440250031.png" alt="Docker CLI" width="850"/>
+
+
