@@ -145,6 +145,10 @@ When you attach, you will only be able to interact with the running process, and
 
 Be careful when using `docker attach` as it can cause issues with the running process. For example, if you run `CTRL+C`, it will stop the process and exit the container. To exit from an attached container without stopping it, use `CTRL+P` and then `CTRL+Q`. This will detach you from the container and leave it running in the background.
 
-**Note:** As of 5/2025, issuing `CTRL+P` and then `CTRL+Q` does not work when running the command in WSL. For whatever reason, `CTRL+Q` doesn't get recognized. 
+**Note:** As of 5/2025, issuing `CTRL+P` and then `CTRL+Q` does not work when running the command in WSL. For whatever reason, `CTRL+Q` doesn't get recognized. See [Docker CLI hangs when attempting to detach from a container](https://github.com/docker/cli/issues/3385).
+
+No good workaround exists for this issue. The best option is to run the container in the background and use `docker exec` to access it.
+
+#### `docker exec`
 
 
