@@ -27,6 +27,9 @@
     - [`docker exec`](#docker-exec)
     - [`docker logs`](#docker-logs)
     - [`docker rm`](#docker-rm)
+    - [`docker pull/run`](#docker-pullrun)
+    - [`docker build`](#docker-build)
+- [2. Deploying Kubernetes Using KinD](#2-deploying-kubernetes-using-kind)
 
 
 ## 1. Docker and Container Essentials
@@ -220,3 +223,25 @@ Run `docker rm <container_id/name>` to remove a container. During container imag
 docker rm test-nginx
 ```
 **Note:** You can also add the `--rm` option to your Docker command to automatically remove the image after it is stopped.
+
+When removing a container that has a volume attached, it's good practice to add the `-v` option to remove the volume as well. 
+
+#### `docker pull/run`
+
+`docker pull` and `docker run` are used to pull an image or run an image. If you try to run a container that doesn't exist, Docker will initiate a `pull` request to get the container and then run it.
+
+When running a pull, be sure to specify the architecture:
+
+```bash
+docker pull --platform=linux/amd64 ubuntu:latest
+```
+
+#### `docker build`
+
+Similar to `pull` and `run`, `docker build`  will attempt to build the image based on the host's architecture. If you want to build for a different architecture, use the `buildx` subcommand:
+
+```bash
+docker buildx build --platform linux/arm64 --tag docker.io/mlbiam/openunison-kubernetes-operator --no-cache -f ./src/main/docker/Dockerfile .
+```
+
+## 2. Deploying Kubernetes Using KinD
