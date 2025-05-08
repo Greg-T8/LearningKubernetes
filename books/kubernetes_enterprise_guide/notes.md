@@ -4,8 +4,10 @@
 
 <details>
 <summary>Book Resources</summary>
+
 - [Book Code](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition)
 - [Youtube Channel](https://www.youtube.com/channel/UCK__yS63yrSI8vavJzainEQ)
+
 </details>
 
 <!-- omit in toc -->
@@ -30,6 +32,10 @@
     - [`docker pull/run`](#docker-pullrun)
     - [`docker build`](#docker-build)
 - [2. Deploying Kubernetes Using KinD](#2-deploying-kubernetes-using-kind)
+  - [Introducing Kubernetes components and objects](#introducing-kubernetes-components-and-objects)
+    - [Interacting with a cluster](#interacting-with-a-cluster)
+  - [Using development clusters](#using-development-clusters)
+  - [Working with a basic KinD Kubernetes cluster](#working-with-a-basic-kind-kubernetes-cluster)
 
 
 ## 1. Docker and Container Essentials
@@ -245,3 +251,41 @@ docker buildx build --platform linux/arm64 --tag docker.io/mlbiam/openunison-kub
 ```
 
 ## 2. Deploying Kubernetes Using KinD
+
+The tool KinD (Kubernetes in Docker) is a tool for running Kubernetes clusters in Docker containers. It is primarily designed for testing Kubernetes itself, but it can also be used for local development and CI/CD workflows.
+
+### Introducing Kubernetes components and objects
+
+**Common Kubernetes components:**  
+<img src="images/1746698479418.png" alt="Kubernetes Components" width="500"/>
+
+#### Interacting with a cluster
+
+Use the `kubectl` command:  
+
+| Kubectl command                                                   | Description                                                                                                                                                    |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kubectl get <object>`                                            | Retrieves a list of the requested object.<br>Example: `kubectl get nodes`.                                                                                     |
+| `kubectl create -f <manifest-name>`                               | Creates the objects in the `include` manifest that is provided. `create` can only create the initial objects; it cannot update the objects.                    |
+| `kubectl apply -f <manifest-name>`                                | Deploys the objects in the `include` manifest that is provided. Unlike the `create` option, the `apply` command can update objects, as well as create objects. |
+| `kubectl patch <object-type> <object-name> -p {patching options}` | Patches the supplied `object-type` with the options provided.                                                                                                  |
+
+### Using development clusters
+
+The following tools have benefits and limitations for conducting testing on local systems:
+- Docker Desktop
+- K3s
+- KinD
+- kudbeadm
+- minikube
+- Rancher Desktop
+
+**KinD**:  
+To truly get into Kubernetes, you need to have a cluster that has at least a control plane and a single worker node. You may want to test scenarios wher you drop a worker node. In this case you need to create a cluster that has a control plane and three worker nodes. To create these cluster types, you can use a project from the Kubernetes **Special Interest Group (SIG)**, called **KinD**.
+
+https://github.com/kubernetes-sigs/kind
+
+**Note:** KinD is not a production-grade solution. It is only meant for testing and development purposes. 
+
+### Working with a basic KinD Kubernetes cluster
+
