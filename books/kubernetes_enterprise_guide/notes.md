@@ -8,6 +8,26 @@
 - [Youtube Channel](https://www.youtube.com/channel/UCK__yS63yrSI8vavJzainEQ)
 </details>
 
+<!-- omit in toc -->
+## Contents
+
+- [1. Docker and Container Essentials](#1-docker-and-container-essentials)
+  - [Why Kubernetes removed Docker](#why-kubernetes-removed-docker)
+  - [Docker vs Moby](#docker-vs-moby)
+  - [Understanding Docker](#understanding-docker)
+    - [Containers are Ephemeral](#containers-are-ephemeral)
+    - [Docker Images](#docker-images)
+    - [Persistent data](#persistent-data)
+    - [Accessing services running in containers](#accessing-services-running-in-containers)
+  - [Using the Docker CLI](#using-the-docker-cli)
+    - [`docker run`](#docker-run)
+    - [`docker ps`](#docker-ps)
+    - [`docker start` and `docker stop`](#docker-start-and-docker-stop)
+    - [`docker attach`](#docker-attach)
+    - [`docker exec`](#docker-exec)
+    - [`docker logs`](#docker-logs)
+    - [`docker rm`](#docker-rm)
+
 
 ## 1. Docker and Container Essentials
 
@@ -110,6 +130,8 @@ docker ps
 ```
 <img src="images/1746440094410.png" alt="Docker CLI" width="850"/>
 
+**Note:** The `ps` stands for "process status".
+
 View status of all containers (running and stopped):
 
 ```bash
@@ -151,4 +173,50 @@ No good workaround exists for this issue. The best option is to run the containe
 
 #### `docker exec`
 
+Run `docker exec -it <container_id/name> <command>` to run a command inside a running container.
 
+The option `i` is for interactive mode, and `t` is for terminal mode. This allows you to run commands inside the container as if you were logged into the container. 
+
+```bash
+docker exec -t test-nginx bash
+```
+**Output:**  
+<img src="images/1746696244229.png" alt="Docker CLI" width="350"/>
+
+**Note:**
+- The prompt change from the original username and hostname to `root@<container_id>` indicates that you are now inside the container.
+- The current working directory changed from `~` to `/app`
+
+#### `docker logs`
+
+Run `docker logs <container_id/name>` to retrieve the logs from a container.
+
+Log files are often the only way to troubleshoot issues with a container. 
+
+```bash
+docker logs <container_id/name>
+```
+**Output:**  
+<img src="images/1746696495152.png" alt="Docker CLI" width="850"/>
+
+The following table lists the options for viewing logs:
+
+| Log Options | Description                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -f          | Follow the log output (can also use `--follow`).                                                                                                      |
+| --tail xx   | Show the log output starting from the end of the file and retrieve `xx` lines.                                                                        |
+| --until xxx | Show the log output before the `xxx` timestamp.<br>`xxx` can be a timestamp (e.g., 2020-02-23T18:35:13).<br>`xxx` can be a relative time (e.g., 60m). |
+| --since xxx | Show the log output after the `xxx` timestamp.<br>`xxx` can be a timestamp (e.g., 2020-02-23T18:35:13).<br>`xxx` can be a relative time (e.g., 60m).  |
+
+**Example:** Using the `--since` option   
+<img src="images/1746697006776.png" alt="Docker CLI" width="750"/>
+
+
+#### `docker rm`
+
+Run `docker rm <container_id/name>` to remove a container. During container image testing, you may need to remove a container if you want a new container to be created with the same name.
+
+```bash
+docker rm test-nginx
+```
+**Note:** You can also add the `--rm` option to your Docker command to automatically remove the image after it is stopped.
