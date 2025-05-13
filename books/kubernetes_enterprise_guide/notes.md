@@ -39,6 +39,7 @@
   - [Understanding the node image](#understanding-the-node-image)
   - [KinD and Docker networking](#kind-and-docker-networking)
     - [Keeping track of the nesting dolls](#keeping-track-of-the-nesting-dolls)
+  - [Installing KinD](#installing-kind)
 
 
 ## 1. Docker and Container Essentials
@@ -379,6 +380,10 @@ If you wish to communicate between the host and a container within the KinD clus
 
 Let's say you want to deploy a web server to your Kubernetes cluster. After successfully deploying an ingress controller within the KinD cluster, you want to test the website using Chrome on another workstation on your network, but the browser fails to connect.
 
-The reason for this failure is that theweb server's pod operates at layer 3 and cannot directly receive traffice from the host or network machines. To access, you must forward traffic from the Docker layer to the KinD layer by enabling port forwarding.
+The reason for this failure is that the web server's pod operates at layer 3 and cannot directly receive traffice from the host or network machines. To access, you must forward traffic from the Docker layer to the KinD layer by enabling port forwarding.
 
+<img src="images/1747130351371.png" alt="KinD Nesting Dolls" width="450"/>
 
+### Installing KinD
+
+[create-cluster.sh](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/create-cluster.sh)
