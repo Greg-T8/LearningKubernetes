@@ -324,4 +324,24 @@ kubectl get pods --all
 
 In addition to the base cluster components, you may notice a running pod in a namespace called `local-path-storage`, along with a pod named `local-path-provisioner`. This pod runs one of the add-ons included with KinD, providing the luster the ability to auto-provision `PersistentVolumeClaims`.
 
+The local provisioner is great for testing, but it is not a production-grade solution. Most production clusters provide persistent storage to developers. Usually the storage is backed by systems based on block storage, e.g. S3 (Simple Storage Service), or NFS (Network File System).
+
+There are a few API objects, `CSIdrivers` , `CSInodes`, and `StorageClass`, that are used by the cluster to provide access to the backend storage system. Once installed and configured, pods consume the storage using `PersistentVolumes` and `PersistentVolumeClaims` objects.
+
+Storage objects are important to understand. When they were first released, they were difficult for most people to test, since they weren't included in most Kubernetes development offerings.
+
+KinD recognized this limitation and chose to bundle a project from Rancher Labs, now part of SUSE, called `local-path-provisioner`, which is built upon the Kubernetes local persistent volumes framework, introduced in Kubernetes 1.10.
+
+Why would anyone need an add-on, since Kubernetes has native support for local host persistent volumes? While local support has been added, Kubernetes does not provide a way to auto-provision the local persistent volumes. While the **CNCF (CLoud Native Computing Foundation)** offers an auto-provisioner, it must be installed and configured as a separate Kubernetes component. KinD's provisioner removes this configuration, so you can use persistent volumes easily on development clusters.
+
+Rancher's project provides:
+- Auto-creation of `PersistentVolumes` when a `PersistentVolumeClaim` is created
+- A default `StorageClass` named standard
+
+The `local-path-provisioner` adds a feature to KinD clusters that greatly expands potential test scenarios you can run. Without the ability to auto-provision persistent disks, it would be a challenge to test deployments that require persistent disks.
+
+With the help of Rancher, KinD provides a solution to allow you to experiment with dynamic volumes, storage classes, and other storage tests that would otherwise be impossible to run outside of an expensive home lab or data center.
+
+Knowing how to use persistent sotrage in Kubernetes is a great skill to have.
+
 
