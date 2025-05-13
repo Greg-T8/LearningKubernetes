@@ -270,6 +270,8 @@ Use the `kubectl` command:
 | `kubectl apply -f <manifest-name>`                                | Deploys the objects in the `include` manifest that is provided. Unlike the `create` option, the `apply` command can update objects, as well as create objects. |
 | `kubectl patch <object-type> <object-name> -p {patching options}` | Patches the supplied `object-type` with the options provided.                                                                                                  |
 
+**Note:** `kubectl` stands for **Kubernetes Control**.
+
 ### Using development clusters
 
 The following tools have benefits and limitations for conducting testing on local systems:
@@ -288,4 +290,38 @@ https://github.com/kubernetes-sigs/kind
 **Note:** KinD is not a production-grade solution. It is only meant for testing and development purposes. 
 
 ### Working with a basic KinD Kubernetes cluster
+
+KinD can be seen as comprising a single Docker container, responsible for running both a control plane node and a worker node, creating a Kubernetes cluster. 
+
+KinD packages all Kubernetes objects into a unified image, referred to as a *node image*. The node image includes all the necessary components to run either a single-node or multi-node cluster. 
+
+You can utilize Docker to execute command within a control plane node container to examine the process list:
+
+Example when running `docker exec cluster01-worker ps -ef`:
+
+<img src="images/1747126469411.png" alt="Docker KinD" width="550"/>
+
+**Note:** Host process list showing control plane components: `API-Server`, `kube-scheduler`, `kube-controller-manager`, and `etcd` processes.
+
+You can `exec` into a worker node to check its components:
+
+<img src="images/1747126659263.png" alt="Docker KinD" width="550"/>
+
+**Note:** Host process list showing worker node components: `kubelet`, `kube-proxy`, and `containerd` processes.
+
+Both KinD nodes (the control plane node and worker node) have an additional component that is not part of standard Kubernetes installations, referred to as **Kindnet**. Kindnet is a **Container Network Interface (CNI)** solution included in a default KinD deployment and provides networking to a Kubernetes cluster.
+
+The Kubernetes CNI is a specification that allows Kubernetes to use different networking solutions, e.g. Calico, Flannel, Cilium, Kindnet, and more.
+
+Kindnet serves as the default CNI, you can deactivate it nad use an alternative, suchas Calico. While Kindnet would work for most tasks in this book, it isn't a CNI you will see in a real-world Kubernetes cluster.
+
+To show the complete cluster, including all components, run:
+
+```bash
+kubectl get pods --all
+```
+<img src="images/1747127083616.png" alt="Docker KinD" width="650"/>
+
+In addition to the base cluster components, you may notice a running pod in a namespace called `local-path-storage`, along with a pod named `local-path-provisioner`. This pod runs one of the add-ons included with KinD, providing the luster the ability to auto-provision `PersistentVolumeClaims`.
+
 
