@@ -36,6 +36,9 @@
     - [Interacting with a cluster](#interacting-with-a-cluster)
   - [Using development clusters](#using-development-clusters)
   - [Working with a basic KinD Kubernetes cluster](#working-with-a-basic-kind-kubernetes-cluster)
+  - [Understanding the node image](#understanding-the-node-image)
+  - [KinD and Docker networking](#kind-and-docker-networking)
+    - [Keeping track of the nesting dolls](#keeping-track-of-the-nesting-dolls)
 
 
 ## 1. Docker and Container Essentials
@@ -343,5 +346,39 @@ The `local-path-provisioner` adds a feature to KinD clusters that greatly expand
 With the help of Rancher, KinD provides a solution to allow you to experiment with dynamic volumes, storage classes, and other storage tests that would otherwise be impossible to run outside of an expensive home lab or data center.
 
 Knowing how to use persistent sotrage in Kubernetes is a great skill to have.
+
+### Understanding the node image
+
+In KinD (Kubernetes in Docker), the **node image** is a special Docker image that acts like a full Kubernetes node. It's what allows KinD to run entire Kubernetes clusters inside regular Docker containers.
+
+This is impressive because normally, Docker containers are very lightweight and *don’t* include key parts of a full Linux system — like **systemd** (the system manager that controls services and startup processes) and other low-level components that Kubernetes usually needs. KinD overcomes this by building a custom node image that bundles just enough of these missing pieces, so Kubernetes can run correctly inside a container environment that wasn’t really designed for it.
+
+KinD starts with a base image, which is an image the team has developed that contains everything required for Docker, Kubernetes, and `systemd`. This node image is based on a base `Ubuntu` image. 
+
+### KinD and Docker networking
+
+KinD relies on Docker and Red Hat's `Podman` as the container engine to run cluster nodes. Clusters have the same networking constraints associated with Docker containers. These limitations may introduce complications when attempting to test containers from other machines on your network.
+
+> `Podman` is an alternative that KinD now supports. It's an open-source offering that is meant to replace Docker as a runtime engine. It offers many advantages over Docker, such as enhanced security and not requiring a system daemon. However, it also adds complexity for people who are new to containers.
+
+When you install KinD on a Docker host, a new Docker bridge network is created, called `kind`. This bridge resolves issues with the default Docker bridge network. When running additional containers on the KinD network, you need to add `--net=kind` to the `docker run` command. 
+
+Apart from Docker networking considerations, you must also consider the Kubernetes CNI (Container Network Interface). KinD supports multiple CNI interfaces, including KindNet, Calico, and Cilium. Officially, Kindnet is the only CNI they will support, but you do have the option to disable the default Kindnet installation, which will create a cluster without a CNI installed.
+
+After the cluster is created, you can install a different CNI, such as Calico or Cilium. Since many enterprise clusters use Tigera's Calico, we will use it in this book.
+
+#### Keeping track of the nesting dolls
+
+Since KinD involves a container-in-container approach, it's easy to lose track of the communication paths between your host, Docker, and the Kubernetes nodes.
+
+There are three layers of containers:
+
+<img src="images/1747129936155.png" alt="KinD Nesting Dolls" width="450"/>
+
+If you wish to communicate between the host and a container within the KinD cluster, you will need to traverse the Docker layer.
+
+Let's say you want to deploy a web server to your Kubernetes cluster. After successfully deploying an ingress controller within the KinD cluster, you want to test the website using Chrome on another workstation on your network, but the browser fails to connect.
+
+The reason for this failure is that theweb server's pod operates at layer 3 and cannot directly receive traffice from the host or network machines. To access, you must forward traffic from the Docker layer to the KinD layer by enabling port forwarding.
 
 
