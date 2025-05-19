@@ -45,6 +45,9 @@
     - [Installing other required executables - `Helm` and `jq`](#installing-other-required-executables---helm-and-jq)
   - [Creating a KinD cluster](#creating-a-kind-cluster)
     - [Creating a simple cluster](#creating-a-simple-cluster)
+    - [Deleting a cluster](#deleting-a-cluster)
+    - [Creating a cluster config file](#creating-a-cluster-config-file)
+    - [Multi-node cluster configuration](#multi-node-cluster-configuration)
 
 
 ## 1. Docker and Container Essentials
@@ -473,4 +476,95 @@ kind create cluster --name custom-cluster
 To verify cluster creation, run `kubectl get nodes`:
 
 <img src="images/1747647005311.png" alt="alt text" width="500"/>
+
+#### Deleting a cluster
+
+```bash
+kind delete cluster --name custom-cluster 
+```
+<img src="images/1747647178526.png" alt="alt text" width="350"/>
+
+If you run `kind delete cluster` without the `--name` option, it will attempt to delete the default cluster named `kind`.
+
+#### Creating a cluster config file
+
+THe following config file can be used to create a KinD cluster:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+runtimeConfig:
+  "authentication.k8s.io/v1beta1": "true"
+  "admissionregistration.k8s.io/v1beta1": true
+featureGates:
+  "ValidatingAdmissionPolicy": true
+networking:
+  apiServerAddress: "0.0.0.0"
+  disableDefaultCNI: true
+  apiServerPort: 6443
+  podSubnet: "10.240.0.0/16"
+  serviceSubnet: "10.96.0.0/16"
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 2379
+    hostPort: 2379
+  extraMounts:
+  - hostPath: /sys/kernel/security
+    containerPath: /sys/kernel/security
+- role: worker
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+  - containerPort: 443
+    hostPort: 443
+  - containerPort: 2222
+    hostPort: 2222
+  extraMounts:
+  - hostPath: /sys/kernel/security
+    containerPath: /sys/kernel/security
+```
+[Source](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/cluster01-kind.yaml)
+
+
+| Config Options          | Option Details                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiServerAddress`      | This configuration option tells the installation what IP address the API server will listen on. By default, it will use `127.0.0.1`, but since we plan to use the cluster from other networked machines, we have selected to listen on all IP addresses.                                                                |
+| `disableDefaultCNI`     | This setting is used to enable or disable the Kindnet installation. The default value is `false`, but since we want to use Calico as our CNI, we need to set it to `true`.                                                                                                                                              |
+| `podSubnet`             | Sets the CIDR range that will be used by pods.                                                                                                                                                                                                                                                                          |
+| `serviceSubnet`         | Sets the CIDR range that will be used by services.                                                                                                                                                                                                                                                                      |
+| `Nodes`                 | This section is where you define the nodes for the cluster. For our cluster, we will create a single control plane node and a single worker node.                                                                                                                                                                       |
+| `- role: control-plane` | The role section allows you to set options for nodes. The first role section is for the `control-plane`.                                                                                                                                                                                                                |
+| `- role: worker`        | This is the second node section, which allows you to configure options that the worker nodes will use. Since we will deploy an Ingress controller, we have also added additional ports that will be used by the NGINX pod.                                                                                              |
+| `extraPortMappings`     | To expose ports to your KinD nodes, you need to add them to the `extraPortMappings` section of the configuration. Each mapping has two values, the container port and the host port. The host port is the port you would use to target the cluster, while the container port is the port that the container listens on. |
+
+#### Multi-node cluster configuration
+
+If you only want a multi-node cluster without any extra options, you can create a simple config file that lists the number and node types you want.
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: control-plane
+- role: control-plane
+- role: worker
+- role: worker
+- role: worker
+```
+
+Introducing multiple control plane servers adds complexity since the `kubectl` config file can only target a single host or IP. To make this solution work, you need to add a *load balancer* in front of the control plane nodes. When you deploy multiple control plane nodes, KinD creates an additional container running a `HAProxy` load balancer.
+
+> `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
+
+```bash
+kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
+```
+
+Note below how the installation automatically creates a load balancer for the control plane nodes:
+
+<img src="images/1747648843774.png" alt="alt text" width="600"/>
+
+
 
