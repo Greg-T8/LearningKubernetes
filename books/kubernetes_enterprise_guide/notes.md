@@ -43,6 +43,8 @@
     - [Installing `kubectl`](#installing-kubectl)
     - [Installing the KinD binary](#installing-the-kind-binary)
     - [Installing other required executables - `Helm` and `jq`](#installing-other-required-executables---helm-and-jq)
+  - [Creating a KinD cluster](#creating-a-kind-cluster)
+    - [Creating a simple cluster](#creating-a-simple-cluster)
 
 
 ## 1. Docker and Container Essentials
@@ -448,3 +450,27 @@ chmod 700 get_helm.sh
 sudo snap install jq --classic
 ```
 <img src="images/1747646432670.png" alt="alt text" width="650"/>
+
+**Note:**  
+- `Helm` is a package manager for Kubernetes.
+- `jq` is a command-line JSON processor and allows you to extract, filter, transform, and format JSON data.
+
+### Creating a KinD cluster
+
+#### Creating a simple cluster
+
+To create a simple cluster that runs the control plane and a worker node in a single container, you only need to execute `kind` with the `create cluster` option.
+
+This command creates a cluster named `kind`, encompassing all the necessary components within a single Docker container. The Docker container itself will be assigned the name `kind-control-plane`.
+
+You can use the `--name` option to specify a different name for the cluster. 
+
+```bash
+kind create cluster --name custom-cluster
+```
+<img src="images/1747646915741.png" alt="alt text" width="400"/>
+
+To verify cluster creation, run `kubectl get nodes`:
+
+<img src="images/1747647005311.png" alt="alt text" width="500"/>
+
