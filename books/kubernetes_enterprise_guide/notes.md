@@ -40,6 +40,9 @@
   - [KinD and Docker networking](#kind-and-docker-networking)
     - [Keeping track of the nesting dolls](#keeping-track-of-the-nesting-dolls)
   - [Installing KinD](#installing-kind)
+    - [Installing `kubectl`](#installing-kubectl)
+    - [Installing the KinD binary](#installing-the-kind-binary)
+    - [Installing other required executables - `Helm` and `jq`](#installing-other-required-executables---helm-and-jq)
 
 
 ## 1. Docker and Container Essentials
@@ -386,4 +389,62 @@ The reason for this failure is that the web server's pod operates at layer 3 and
 
 ### Installing KinD
 
-[create-cluster.sh](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/create-cluster.sh)
+The book provides the following script to deploy all components of KinD: [create-cluster.sh](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/create-cluster.sh)
+
+The sections that follow cover manually installing KinD and its components.
+
+#### Installing `kubectl`
+
+When using Ubuntu, you can run it by running `snap install`:
+
+```bash
+sudo snap install kubectl --classic
+```
+<img src="images/1747645236940.png" alt="alt text" width="500"/>
+
+**Note:** You won't be able to install via `apt` out of the box:  
+<img src="images/1747645383043.png" alt="alt text" width="400"/>
+
+You can also download `kubectl` directly from Google:
+
+```bash
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+```
+
+<img src="images/1747645697106.png" alt="alt text" width="750"/>
+
+#### Installing the KinD binary
+
+The KinD binary is a single executable used for creating and deleting clusters.
+
+GitHub Repo for release download: https://github.com/kubernetes-sigs/kind
+
+The following commands download the latest version of the `kind` executable and installs it in `/usr/bin`:
+
+```bash
+curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.22.0/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/bin
+```
+<img src="images/1747646196271.png" alt="alt text" width="750"/>
+
+The `kind` command can:
+- Create and delete clusters
+- Create a custom build base and node images
+- Export `kubeconfig` or log files
+- Retrieve clusters, nodes, or `kubeconfig` files
+- Load images into nodes
+
+#### Installing other required executables - `Helm` and `jq`
+
+The following commands install `Helm` and `jq`:
+
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+sudo snap install jq --classic
+```
+<img src="images/1747646432670.png" alt="alt text" width="650"/>
