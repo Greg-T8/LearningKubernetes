@@ -14,6 +14,9 @@
 ## Helpful Commands
 
 ```bash
+docker ps -a              # Check container status
+
+
 kind get clusters
 kind get nodes
 kind create cluster --name custom-cluster
@@ -578,3 +581,68 @@ kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
 Note below how the installation automatically creates a load balancer for the control plane nodes:
 
 <img src="images/1747648843774.png" alt="alt text" width="600"/>
+
+However, note the error message in the screenshot. To diagnose the issue, you can re-run the command with the `--retain` option, which will keep the cluster even if it fails to create. This allows you to troubleshoot the issue without losing the cluster. From there, you can export the logs to a file and view them to see what went wrong:
+
+```bash
+kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain
+kind export logs --name my-ha-cluster
+```
+
+When viewing the log file, `less /tmp/687778924/my-ha-cluster-worker2/kubelet.log`: 
+```bash
+Jun 16 10:09:11 my-ha-cluster-worker2 kubelet[469]: E0616 10:09:11.021539     469 dynamic_cafile_content.go:166] "Failed to watch CA file, will retry later" err="error creating fsnotify watcher: too many open files"
+```
+
+See:  
+- [GitHub: Issue during creating kind cluster with multiple control-plan](https://github.com/kubernetes-sigs/kind/issues/3128?)
+- [KinD Known Issues: Pod errors due to “too many open files"](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
+
+The fix in my case was to increase the number of `inotify` instances to 512 (defaults is 128):
+
+```bash
+sudo sysctl fs.inotify.max_user_instances=512
+```
+
+Result:
+
+```bash
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
+╰╴% kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain
+Creating cluster "my-ha-cluster" ...
+ ✓ Ensuring node image (kindest/node:v1.29.2) 🖼 
+ ✓ Preparing nodes 📦 📦 📦 📦 📦  
+ ✓ Configuring the external load balancer ⚖️ 
+ ✓ Writing configuration 📜 
+ ✓ Starting control-plane 🕹️ 
+ ✓ Installing CNI 🔌 
+ ✓ Installing StorageClass 💾 
+ ✓ Joining more control-plane nodes 🎮 
+ ✓ Joining worker nodes 🚜 
+Set kubectl context to "kind-my-ha-cluster"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-my-ha-cluster
+
+Thanks for using kind! 😊
+```
+
+Verify cluster status:
+
+```bash
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
+╰╴% kubectl cluster-info --context kind-my-ha-cluster                                       
+Kubernetes control plane is running at https://127.0.0.1:35387
+CoreDNS is running at https://127.0.0.1:35387/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
+╰╴% kubectl get nodes                                
+NAME                           STATUS   ROLES           AGE     VERSION
+my-ha-cluster-control-plane    Ready    control-plane   8m7s    v1.29.2
+my-ha-cluster-control-plane2   Ready    control-plane   7m37s   v1.29.2
+my-ha-cluster-control-plane3   Ready    control-plane   7m29s   v1.29.2
+my-ha-cluster-worker           Ready    <none>          7m19s   v1.29.2
+my-ha-cluster-worker2          Ready    <none>          7m19s   v1.29.2
+```
