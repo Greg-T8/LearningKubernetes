@@ -652,4 +652,15 @@ my-ha-cluster-control-plane3   Ready    control-plane   30s   v1.29.2
 my-ha-cluster-worker           Ready    <none>          19s   v1.29.2
 my-ha-cluster-worker2          Ready    <none>          20s   v1.29.2
 my-ha-cluster-worker3          Ready    <none>          20s   v1.29.2
+
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
+╰╴% docker ps -a
+CONTAINER ID   IMAGE                                COMMAND                  CREATED         STATUS         PORTS                       NAMES
+11753632a37c   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:40999->6443/tcp   my-ha-cluster-control-plane
+37b710d7c5ff   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   4 minutes ago   Up 4 minutes   127.0.0.1:42667->6443/tcp   my-ha-cluster-external-load-balancer
+530d7fc78c7a   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker
+9fd22616e1f1   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker3
+dbfc3abf9e2d   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker2
+73b1f848da48   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:36205->6443/tcp   my-ha-cluster-control-plane3
+1f4d290ea9b6   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:40769->6443/tcp   my-ha-cluster-control-plane2
 ```
