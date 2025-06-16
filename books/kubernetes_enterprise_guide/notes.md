@@ -14,14 +14,20 @@
 ## Helpful Commands
 
 ```bash
+# Docker commands
 docker ps -a              # Check container status
 
-
+# KinD commands
 kind get clusters
 kind get nodes
 kind create cluster --name custom-cluster
 kind delete cluster --name custom-cluster
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
+kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain  # Keep the cluster even if the command fails
+kind export logs --name my-ha-cluster
+
+# Kubernetes commands
+kubectl get nodes          # Check Kubernetes node status
 ```
 
 
@@ -638,11 +644,12 @@ CoreDNS is running at https://127.0.0.1:35387/api/v1/namespaces/kube-system/serv
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 
 ╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% kubectl get nodes                                
-NAME                           STATUS   ROLES           AGE     VERSION
-my-ha-cluster-control-plane    Ready    control-plane   8m7s    v1.29.2
-my-ha-cluster-control-plane2   Ready    control-plane   7m37s   v1.29.2
-my-ha-cluster-control-plane3   Ready    control-plane   7m29s   v1.29.2
-my-ha-cluster-worker           Ready    <none>          7m19s   v1.29.2
-my-ha-cluster-worker2          Ready    <none>          7m19s   v1.29.2
+╰╴% kubectl get nodes                                                                       
+NAME                           STATUS   ROLES           AGE   VERSION
+my-ha-cluster-control-plane    Ready    control-plane   73s   v1.29.2
+my-ha-cluster-control-plane2   Ready    control-plane   42s   v1.29.2
+my-ha-cluster-control-plane3   Ready    control-plane   30s   v1.29.2
+my-ha-cluster-worker           Ready    <none>          19s   v1.29.2
+my-ha-cluster-worker2          Ready    <none>          20s   v1.29.2
+my-ha-cluster-worker3          Ready    <none>          20s   v1.29.2
 ```
