@@ -11,6 +11,19 @@
 </details>
 
 <!-- omit in toc -->
+## Helpful Commands
+
+```bash
+kind get clusters
+kind get nodes
+kind create cluster --name custom-cluster
+kind delete cluster --name custom-cluster
+kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
+```
+
+
+
+<!-- omit in toc -->
 ## Contents
 
 - [1. Docker and Container Essentials](#1-docker-and-container-essentials)
@@ -31,7 +44,7 @@
     - [`docker rm`](#docker-rm)
     - [`docker pull/run`](#docker-pullrun)
     - [`docker build`](#docker-build)
-- [2. Deploying Kubernetes Using KinD](#2-deploying-kubernetes-using-kind)
+- [2. Deploying Kubernetes Using KinD (Kubernetes in Docker)](#2-deploying-kubernetes-using-kind-kubernetes-in-docker)
   - [Introducing Kubernetes components and objects](#introducing-kubernetes-components-and-objects)
     - [Interacting with a cluster](#interacting-with-a-cluster)
   - [Using development clusters](#using-development-clusters)
@@ -262,7 +275,7 @@ Similar to `pull` and `run`, `docker build`  will attempt to build the image bas
 docker buildx build --platform linux/arm64 --tag docker.io/mlbiam/openunison-kubernetes-operator --no-cache -f ./src/main/docker/Dockerfile .
 ```
 
-## 2. Deploying Kubernetes Using KinD
+## 2. Deploying Kubernetes Using KinD (Kubernetes in Docker)
 
 The tool KinD (Kubernetes in Docker) is a tool for running Kubernetes clusters in Docker containers. It is primarily designed for testing Kubernetes itself, but it can also be used for local development and CI/CD workflows.
 
@@ -565,6 +578,3 @@ kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
 Note below how the installation automatically creates a load balancer for the control plane nodes:
 
 <img src="images/1747648843774.png" alt="alt text" width="600"/>
-
-
-
