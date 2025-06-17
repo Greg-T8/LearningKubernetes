@@ -760,7 +760,7 @@ This script uses the following steps:
 
 This script creates a cluster using a configuration file called cluster01-kind.yaml, which will create a cluster called cluster01 with a control plane and worker node, exposing ports 80 and 443 on the worker node for our ingress controller.
 
-THe Calico and NGINX Ingress manifests are also included in the script. These are the standard deployment manifests from both the Calico and NGINX projects. Calico is a popular CNI (Container Network Interface) solution for Kubernetes used for pod networking. NGINX Ingress is a load balancer for the worker nodes.
+THe Calico and NGINX Ingress manifests are also included in the script. These are the standard deployment manifests from both the Calico and NGINX projects. Calico is a popular CNI (Container Network Interface) solution for Kubernetes used for pod networking. NGINX Ingress is an implementation that uses NGINX as a reverse proxy to route external HTTPS traffic into Kubernetes clusters.
 
 ```bash
 chmod +x create-cluster.sh
