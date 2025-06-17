@@ -17,6 +17,10 @@
 # Docker commands
 docker ps -a              # Check container status
 
+# Kubernetes commands
+kubectl cluster-info
+kubectl get nodes          
+
 # KinD commands
 kind get clusters
 kind get nodes
@@ -25,9 +29,6 @@ kind delete cluster --name custom-cluster
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain  # Keep the cluster even if the command fails
 kind export logs --name my-ha-cluster
-
-# Kubernetes commands
-kubectl get nodes          # Check Kubernetes node status
 ```
 
 
@@ -743,3 +744,52 @@ nodes:
 See [Customizing components with the kubeadm API](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/) for an overview of the available options.
 
 #### Creating a KinD cluster
+
+The author provides the following script to create a KinD cluster from a configuration file: 
+- [create-cluster.sh](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/create-cluster.sh)
+- [cluster01-kind.yaml](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/cluster01-kind.yaml)
+
+This script uses the following steps:
+1. Downloads the KinD v 0.22.0 binary, makes it executable, and moves it to /usr/bin. 
+2. Downloads kubectl, make it executable, and moves it to /usr/bin. 
+3. Downloads the Helm installation script and executes it. 
+4. Installs jq. 
+5. Executes KinD to create our cluster using the config file and declaring the image to use (we do this to avoid any issues with newer releases and our chapter scripts). 
+6. Labels the worker node for ingress. Uses the two manifests, custom-resources.yaml and tigera-operator.yaml, in the chapter2/calico to deploy Calico. 
+7. Deploys the NGINX Ingress using the nginx-deploy.yaml manifest in the chapter2/nginx-ingress directory.
+
+This script creates a cluster using a configuration file called cluster01-kind.yaml, which will create a cluster called cluster01 with a control plane and worker node, exposing ports 80 and 443 on the worker node for our ingress controller.
+
+THe Calico and NGINX Ingress manifests are also included in the script. These are the standard deployment manifests from both the Calico and NGINX projects. Calico is a popular CNI (Container Network Interface) solution for Kubernetes used for pod networking. NGINX Ingress is a load balancer for the worker nodes.
+
+```bash
+chmod +x create-cluster.sh
+./create-cluster.sh
+```
+<details>
+<summary>Output</summary>
+
+<img src="images/1750157003414.png" alt="alt text" width="750"/>
+
+</details>
+
+```bash
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
+╰╴% kubectl cluster-info
+Kubernetes control plane is running at https://0.0.0.0:6443
+CoreDNS is running at https://0.0.0.0:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
+╰╴% kubectl get nodes   
+NAME                      STATUS   ROLES           AGE     VERSION
+cluster01-control-plane   Ready    control-plane   9m31s   v1.30.0
+cluster01-worker          Ready    <none>          9m11s   v1.30.0
+
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
+╰╴% docker ps -a 
+CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS                                                              NAMES
+ff3895dee2d0   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:2379->2379/tcp, 0.0.0.0:6443->6443/tcp                     cluster01-control-plane
+ed014496997c   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:2222->2222/tcp   cluster01-worker
+```
