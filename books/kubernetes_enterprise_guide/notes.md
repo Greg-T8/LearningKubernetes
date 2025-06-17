@@ -664,3 +664,7 @@ dbfc3abf9e2d   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4
 73b1f848da48   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:36205->6443/tcp   my-ha-cluster-control-plane3
 1f4d290ea9b6   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:40769->6443/tcp   my-ha-cluster-control-plane2
 ```
+
+The [kubectl](./ch02/kind-multi-control-plane.yaml) config file can only target a single host or IP. To make this solution work, you need a load balancer in front of the control plane nodes. KinD considers this and create an additional container running a `HAProxy` load balancer (see above). However, note that `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
+
+
