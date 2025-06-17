@@ -576,10 +576,6 @@ nodes:
 - role: worker
 ```
 
-Introducing multiple control plane servers adds complexity since the `kubectl` config file can only target a single host or IP. To make this solution work, you need to add a *load balancer* in front of the control plane nodes. When you deploy multiple control plane nodes, KinD creates an additional container running a `HAProxy` load balancer.
-
-> `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
-
 ```bash
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
 ```
@@ -588,7 +584,7 @@ Note below how the installation automatically creates a load balancer for the co
 
 <img src="images/1747648843774.png" alt="alt text" width="600"/>
 
-However, note the error message in the screenshot. To diagnose the issue, you can re-run the command with the `--retain` option, which will keep the cluster even if it fails to create. This allows you to troubleshoot the issue without losing the cluster. From there, you can export the logs to a file and view them to see what went wrong:
+However, the error message in the screenshot indicates a failure. To diagnose the issue, you can re-run the command with the `--retain` option, which will keep the cluster even if it fails to create. This allows you to troubleshoot the issue without losing the cluster. From there, you can export the logs to a file and view them to see what went wrong:
 
 ```bash
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain
@@ -600,15 +596,16 @@ When viewing the log file, `less /tmp/687778924/my-ha-cluster-worker2/kubelet.lo
 Jun 16 10:09:11 my-ha-cluster-worker2 kubelet[469]: E0616 10:09:11.021539     469 dynamic_cafile_content.go:166] "Failed to watch CA file, will retry later" err="error creating fsnotify watcher: too many open files"
 ```
 
-See:  
-- [GitHub: Issue during creating kind cluster with multiple control-plan](https://github.com/kubernetes-sigs/kind/issues/3128?)
-- [KinD Known Issues: Pod errors due to “too many open files"](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
-
 The fix in my case was to increase the number of `inotify` instances to 512 (defaults is 128):
 
 ```bash
 sudo sysctl fs.inotify.max_user_instances=512
+sysctl fs.inotify.max_user_instances              # To verify the change
 ```
+
+See:  
+- [GitHub: Issue during creating kind cluster with multiple control-plan](https://github.com/kubernetes-sigs/kind/issues/3128?)
+- [KinD Known Issues: Pod errors due to “too many open files"](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
 
 Result:
 
@@ -654,17 +651,55 @@ my-ha-cluster-worker2          Ready    <none>          20s   v1.29.2
 my-ha-cluster-worker3          Ready    <none>          20s   v1.29.2
 
 ╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% docker ps -a
+╰╴% docker ps -a 
 CONTAINER ID   IMAGE                                COMMAND                  CREATED         STATUS         PORTS                       NAMES
-11753632a37c   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:40999->6443/tcp   my-ha-cluster-control-plane
-37b710d7c5ff   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   4 minutes ago   Up 4 minutes   127.0.0.1:42667->6443/tcp   my-ha-cluster-external-load-balancer
-530d7fc78c7a   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker
-9fd22616e1f1   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker3
-dbfc3abf9e2d   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes                               my-ha-cluster-worker2
-73b1f848da48   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:36205->6443/tcp   my-ha-cluster-control-plane3
-1f4d290ea9b6   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   4 minutes ago   Up 4 minutes   127.0.0.1:40769->6443/tcp   my-ha-cluster-control-plane2
+80c7dfd72313   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   2 minutes ago   Up 2 minutes   127.0.0.1:38835->6443/tcp   my-ha-cluster-external-load-balancer
+0d1aaa26fbd9   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   127.0.0.1:42513->6443/tcp   my-ha-cluster-control-plane
+3f9f94cd11b1   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes                               my-ha-cluster-worker
+06cb696dcc2e   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   127.0.0.1:39819->6443/tcp   my-ha-cluster-control-plane3
+8ee4fd6af562   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes                               my-ha-cluster-worker2
+7f669f203260   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   127.0.0.1:35395->6443/tcp   my-ha-cluster-control-plane2
+e6b28621e300   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes                               my-ha-cluster-worker3 my-ha-cluster-control-plane2
 ```
 
 The [kubectl](./ch02/kind-multi-control-plane.yaml) config file can only target a single host or IP. To make this solution work, you need a load balancer in front of the control plane nodes. KinD considers this and create an additional container running a `HAProxy` load balancer (see above). However, note that `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
 
+Given the use of a single host for KinD, each control plane and HAProxy must operate on distinct ports. If you were to examine your Kubernetes configuration file, you would observe that it points to `https://127.0.0.1:38835`, representing the port assigned to the HAProxy container.
 
+
+```bash
+╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
+╰╴% cat ~/.kube/config
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: <removed>
+    server: https://127.0.0.1:38835
+  name: kind-my-ha-cluster
+contexts:
+- context:
+    cluster: kind-my-ha-cluster
+    user: kind-my-ha-cluster
+  name: kind-my-ha-cluster
+current-context: kind-my-ha-cluster
+kind: Config
+preferences: {}
+users:
+- name: kind-my-ha-cluster
+  user:
+    client-certificate-data: <removed>
+```
+When a command is executed using `kubectl`, it is sent directly to the HAProxy server on port `38835`. This port is not hard-coded and changes each time you create a new cluster. 
+
+You can verify access from the host:
+
+```cmd
+╭─( ~
+╰╴> portqry -nr -n 127.0.0.1 -e 38835
+
+Querying target system called:
+
+ 127.0.0.1
+
+TCP port 38835 (unknown service): LISTENING
+```
