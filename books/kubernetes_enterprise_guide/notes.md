@@ -70,6 +70,8 @@ kubectl get nodes          # Check Kubernetes node status
     - [Deleting a cluster](#deleting-a-cluster)
     - [Creating a cluster config file](#creating-a-cluster-config-file)
     - [Multi-node cluster configuration](#multi-node-cluster-configuration)
+    - [Customizing the control plane and Kubelet options](#customizing-the-control-plane-and-kubelet-options)
+    - [Creating a KinD cluster](#creating-a-kind-cluster-1)
 
 
 ## 1. Docker and Container Essentials
@@ -707,3 +709,37 @@ TCP port 38835 (unknown service): LISTENING
 Upon receiving the request, HAProxy knows how to route traffic among the three control plan nodes, providing a highly available control plane for testing.
 
 The HAProxy image is not configurable. Due to this limitation, you will need to provide your own load balancer for the worker nodes. This can be achieved by deploying a second HAProxy instance for the worker nodes, which will be covered later.
+
+#### Customizing the control plane and Kubelet options
+
+You may want to go beyond simple clusters and test **OIDC** integration or Kubernetes **feature gates**. **OIDC** provides Kubernetes with authentication and authorization capabilities through OpenID Connect. A **feature gate** enables access to experimental features and functions like a toggle switch.
+
+This requires you to modify the startup options of components, like the API server. The following example shows how to add OIDC options to the API server and Kubelet:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+kubeadmConfigPatches:
+- |
+  kind: ClusterConfiguration
+  metadata:
+    name: config
+  apiServer:
+    extraArgs:
+      oidc-issuer-url: "https://oidc.testdomain.com/auth/idp/k8sIdp"
+      oidc-client-id: "kubernetes"
+      oidc-username-claim: sub
+      oidc-client-id: kubernetes
+      oidc-ca-file: /etc/oidc/ca.crt
+nodes:
+- role: control-plane
+- role: control-plane
+- role: control-plane
+- role: worker
+- role: worker
+- role: worker
+```
+
+See [Customizing components with the kubeadm API](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/) for an overview of the available options.
+
+#### Creating a KinD cluster
