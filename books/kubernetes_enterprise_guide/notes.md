@@ -664,7 +664,7 @@ e6b28621e300   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2
 
 The [kubectl](./ch02/kind-multi-control-plane.yaml) config file can only target a single host or IP. To make this solution work, you need a load balancer in front of the control plane nodes. KinD considers this and create an additional container running a `HAProxy` load balancer (see above). However, note that `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
 
-Given the use of a single host for KinD, each control plane and HAProxy must operate on distinct ports. If you were to examine your Kubernetes configuration file, you would observe that it points to `https://127.0.0.1:38835`, representing the port assigned to the HAProxy container.
+Given the use of a single host for KinD, each control plane and HAProxy must operate on distinct ports. If you were to examine your Kubernetes configuration file, you would observe that it points to `https://127.0.0.1:38835`, representing the port assigned to the HAProxy container. **Note:** The author indicates the HAProxy server in the config file should be `https://0.0.0.0:38835`, but this was not the case in my observation.
 
 
 ```bash
@@ -703,3 +703,7 @@ Querying target system called:
 
 TCP port 38835 (unknown service): LISTENING
 ```
+
+Upon receiving the request, HAProxy knows how to route traffic among the three control plan nodes, providing a highly available control plane for testing.
+
+The HAProxy image is not configurable. Due to this limitation, you will need to provide your own load balancer for the worker nodes. This can be achieved by deploying a second HAProxy instance for the worker nodes, which will be covered later.
