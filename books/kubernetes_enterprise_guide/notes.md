@@ -29,6 +29,12 @@ kind delete cluster --name custom-cluster
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml
 kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain  # Keep the cluster even if the command fails
 kind export logs --name my-ha-cluster
+
+# Quick KinD cluster check
+kind get clusters
+kubectl cluster-info
+kubectl get nodes
+docker ps -a
 ```
 
 
@@ -73,6 +79,8 @@ kind export logs --name my-ha-cluster
     - [Multi-node cluster configuration](#multi-node-cluster-configuration)
     - [Customizing the control plane and Kubelet options](#customizing-the-control-plane-and-kubelet-options)
     - [Creating a KinD cluster](#creating-a-kind-cluster-1)
+  - [Reviewing the KinD cluster](#reviewing-the-kind-cluster)
+    - [KinD storage objects](#kind-storage-objects)
 
 
 ## 1. Docker and Container Essentials
@@ -793,3 +801,9 @@ CONTAINER ID   IMAGE                  COMMAND                  CREATED         S
 ff3895dee2d0   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:2379->2379/tcp, 0.0.0.0:6443->6443/tcp                     cluster01-control-plane
 ed014496997c   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:2222->2222/tcp   cluster01-worker
 ```
+
+### Reviewing the KinD cluster
+
+#### KinD storage objects
+
+KinD includes Rancher's auto-provisioner to provide  automated persistent disk management for the cluster.
