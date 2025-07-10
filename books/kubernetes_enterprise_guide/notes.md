@@ -849,3 +849,11 @@ Spec:
       Node ID:  cluster01-worker
 Events:         <none>
 ```
+
+The main thing to notice here is the `Spec` section, which lists the details of any drivers installed to support the backend storage systems.
+
+The driver `csi.tigera.io` was installed by the Calico installation. This driver is used to secure connections between Calico's **Felix**, which handles network policy enforcement, and **Dikastes**, which manages Kubernetes network policy translation and enforcement pods by mounting a shared volume.
+
+**Note:**  The `csi.tigera.io` driver is not used by standard Kubernetes deployments for persisten storage. 
+
+Since the local provisioner does not require a driver, you won't see any additional drivers in the `CSInode` objects.
