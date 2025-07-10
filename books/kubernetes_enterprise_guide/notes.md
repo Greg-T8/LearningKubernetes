@@ -19,7 +19,9 @@ docker ps -a              # Check container status
 
 # Kubernetes commands
 kubectl cluster-info
-kubectl get nodes          
+kubectl get nodes
+kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
+kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
 
 # KinD commands
 kind get clusters
@@ -806,4 +808,44 @@ ed014496997c   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago  
 
 #### KinD storage objects
 
-KinD includes Rancher's auto-provisioner to provide  automated persistent disk management for the cluster.
+Typically, CSI (Container Storage Interface) drivers are required to manage external storage (like AWS EBS, Azure Disks, NFS, etc.). These drivers are presented in Kubernets as `CSIDriver` objects.
+
+However, KinD storage uses the local filesystem, and therefore you won't see any `CSIDriver` objects for local storage.
+
+The first storage object this book covers is the `CSInodes` object. In the KinD cluster created in the previous section, both nodes have a `CSInode` object.
+
+```bash
+kubectl get csinodes
+NAME                      DRIVERS   AGE
+cluster01-control-plane   1         16m
+cluster01-worker          1         16m
+```
+
+You  can view the details of the `CSInode` object by running:
+
+```bash
+kubectl describe csinodes cluster01-control-plane
+Name:               cluster01-control-plane
+Labels:             <none>
+Annotations:        storage.alpha.kubernetes.io/migrated-plugins:
+                      kubernetes.io/aws-ebs,kubernetes.io/azure-disk,kubernetes.io/azure-file,kubernetes.io/cinder,kubernetes.io/gce-pd,kubernetes.io/vsphere-vo...
+CreationTimestamp:  Thu, 10 Jul 2025 04:55:29 -0500
+Spec:
+  Drivers:
+    csi.tigera.io:
+      Node ID:  cluster01-control-plane
+Events:         <none>
+
+
+kubectl describe csinodes cluster01-worker        
+Name:               cluster01-worker
+Labels:             <none>
+Annotations:        storage.alpha.kubernetes.io/migrated-plugins:
+                      kubernetes.io/aws-ebs,kubernetes.io/azure-disk,kubernetes.io/azure-file,kubernetes.io/cinder,kubernetes.io/gce-pd,kubernetes.io/vsphere-vo...
+CreationTimestamp:  Thu, 10 Jul 2025 04:55:46 -0500
+Spec:
+  Drivers:
+    csi.tigera.io:
+      Node ID:  cluster01-worker
+Events:         <none>
+```
