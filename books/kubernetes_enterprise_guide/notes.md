@@ -24,6 +24,9 @@ kubectl get csinodes                      # Check the status of the CSI (Contain
 kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
 kubectl get csidrivers                    # List all CSI drivers in the cluster
 kubectl get storageclasses                # List all storage classes in the cluster
+kubectl get pv                            # List all persistent volumes in the cluster
+kubectl get pvc                           # List all persistent volume claims in the cluster
+kubectl create -f pvctest.yaml            # Create a persistent volume claim (PVC) from a YAML file. The -f option specifies the file to use.
 
 # KinD commands
 kind get clusters
@@ -47,7 +50,8 @@ docker ps -a
 - **KinD**: Kubernetes in Docker, a tool for running Kubernetes clusters in Docker containers.
 - **CNI**: Container Network Interface, a specification for configuring network interfaces in Linux containers
 - **CSI**: Container Storage Interface, a standard for exposing storage systems to containerized workloads.
-- **PVC**: Persistent Volume Claim, a request for storage by a user in Kubernetes.
+- **PVC**: Persistent Volume Claim, a request for storage by a user in Kubernetes. 
+- **Pod**: The smallest deployable unit in Kubernetes, which can contain one or more containers.
 
 
 <!-- omit in toc -->
@@ -94,6 +98,7 @@ docker ps -a
     - [KinD storage objects](#kind-storage-objects)
     - [Storage drivers](#storage-drivers)
     - [KinD storage classes](#kind-storage-classes)
+    - [Using KinD's Storage Provisioner](#using-kinds-storage-provisioner)
 
 
 ## 1. Docker and Container Essentials
@@ -902,3 +907,49 @@ kubectl get storageclasses
 NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  24h
 ```
+
+#### Using KinD's Storage Provisioner
+
+Since the Rancher's auto-provisioner is the default `StorageClass`, any PVC requests that come in are seen by the provisioning pod, which then creates a `PersistentVolume` (PV) and `PersistentVolumeClaim` (PVC) for the request.
+
+```bash
+kubectl get pv 
+No resources found
+
+kubectl get pvc
+No resources found in default namespace.
+```
+`PV`s are cluster-level resources; they are not namespaced objects, so you don't need to add a namespace option to the command.
+
+`PVC`s are namespaced objects, so you do need to specify the namespace when running `kubectl get pvc`. Since this is a new cluster and none of the default workloads require a persistent disk, there are currently no `PV`s or `PVC`s in the cluster.
+
+With an auto-provisioner, you need to create a `PV` before a `PVC` could claim the volume. With the Rancher auto-provisioner, you can test the creation process by deploying a pod with a PVC request.
+
+```yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1M
+```
+
+The PVC will be named `test-claim` in the default namespace (since we didn't provide a namespace), and its volume is set at 1MB.
+
+You need to include the `StorageClass` option, since KinD has a default `StorageClass` for the cluster.
+
+```bash
+kubectl create -f pvctest.yaml
+persistentvolumeclaim/test-claim created
+```
+```bash
+kubectl get pvc               
+NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+test-claim   Pending                                      standard       <unset>                 106s
+```
+
+At this point, the PVC object was successfully created
