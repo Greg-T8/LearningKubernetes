@@ -22,6 +22,7 @@ kubectl cluster-info
 kubectl get nodes
 kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
 kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
+kubectl get csidrivers                    # List all CSI drivers in the cluster
 
 # KinD commands
 kind get clusters
@@ -39,6 +40,13 @@ kubectl get nodes
 docker ps -a
 ```
 
+<!-- omit in toc -->
+## Terminology
+
+- **KinD**: Kubernetes in Docker, a tool for running Kubernetes clusters in Docker containers.
+- **CNI**: Container Network Interface, a specification for configuring network interfaces in Linux containers
+- **CSI**: Container Storage Interface, a standard for exposing storage systems to containerized workloads.
+- **PVC**: Persistent Volume Claim, a request for storage by a user in Kubernetes.
 
 
 <!-- omit in toc -->
@@ -83,6 +91,8 @@ docker ps -a
     - [Creating a KinD cluster](#creating-a-kind-cluster-1)
   - [Reviewing the KinD cluster](#reviewing-the-kind-cluster)
     - [KinD storage objects](#kind-storage-objects)
+    - [Storage drivers](#storage-drivers)
+    - [KinD storage classes](#kind-storage-classes)
 
 
 ## 1. Docker and Container Essentials
@@ -810,7 +820,9 @@ ed014496997c   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago  
 
 Typically, CSI (Container Storage Interface) drivers are required to manage external storage (like AWS EBS, Azure Disks, NFS, etc.). These drivers are presented in Kubernets as `CSIDriver` objects.
 
-However, KinD storage uses the local filesystem, and therefore you won't see any `CSIDriver` objects for local storage.
+In the KinD setup, Rancher's auto-provisioner is being used to automatically manage local persistent storage. So when your application asks for a *persistent volume claim* (PVC), Rancher's auto-provisioner will create a local persistent volume (PV) for it.
+
+As a result, you won't see any `CSIDriver` objects in the KinD cluster. This is because the local provisioner does not require a CSI driver to manage local storage.
 
 The first storage object this book covers is the `CSInodes` object. In the KinD cluster created in the previous section, both nodes have a `CSInode` object.
 
@@ -857,3 +869,19 @@ The driver `csi.tigera.io` was installed by the Calico installation. This driver
 **Note:**  The `csi.tigera.io` driver is not used by standard Kubernetes deployments for persisten storage. 
 
 Since the local provisioner does not require a driver, you won't see any additional drivers in the `CSInode` objects.
+
+#### Storage drivers
+
+The primary function of storage drivers in Kubernetes is to control the provisioning, attachment, and management of storage resources for deployed applications.
+
+The KinD cluster does not require any additional storage drivers for the local-provisioner, but there is a driver for Calico's communication. 
+
+```bash
+kubectl get csidrivers                    
+NAME            ATTACHREQUIRED   PODINFOONMOUNT   STORAGECAPACITY   TOKENREQUESTS   REQUIRESREPUBLISH   MODES       AGE
+csi.tigera.io   true             true             false             <unset>         false               Ephemeral   24h
+```
+
+#### KinD storage classes
+
+A `StorageClass` object is required to attach to any cluster-provided storage. Rancher's provider creates a default storage class called `standard` and sets this class as the default `StorageClass`, so you don't need to provide a `StorageClass`  name in your PVC requests.
