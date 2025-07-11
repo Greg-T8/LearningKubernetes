@@ -23,6 +23,7 @@ kubectl get nodes
 kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
 kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
 kubectl get csidrivers                    # List all CSI drivers in the cluster
+kubectl get storageclasses                # List all storage classes in the cluster
 
 # KinD commands
 kind get clusters
@@ -885,3 +886,19 @@ csi.tigera.io   true             true             false             <unset>     
 #### KinD storage classes
 
 A `StorageClass` object is required to attach to any cluster-provided storage. Rancher's provider creates a default storage class called `standard` and sets this class as the default `StorageClass`, so you don't need to provide a `StorageClass`  name in your PVC requests.
+
+If a default `StorageClass` is not set, you would need to specify the `StorageClass` in every PVC request.
+
+If a default class is not enabled, and a PVC request fails to set a `StorageClass` name, the PVC allocation will fail, since the API server won't be able to link the request to a `StorageClass`.
+
+In a production cluster, it is recommended to avoid setting a default `StorageClass`. This approach helps prevent issues when deployments forget to specify a class, and the default storage system does not meet the deployment requirements.
+
+By not assigning a default class, developers will encounter a failed PVC request (i.e. a good thing), prompting the identification of the problem before any issues arise in production.
+
+This approach also encourages developers to explicitly select a `StorageClass` that aligns with the desired performance requirement, enabling them to use cost-effective storage.
+
+```bash
+kubectl get storageclasses
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  24h
+```
