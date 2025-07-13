@@ -23,7 +23,7 @@ kubectl get nodes
 kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
 kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
 kubectl get csidrivers                    # List all CSI drivers in the cluster
-kubectl get storageclasses                # List all storage classes in the cluster
+kubectl get storageclasses                # List all storage classes in the cluster; you can use the short-hand version `sc`
 kubectl get pv                            # List all persistent volumes in the cluster
 kubectl get pvc                           # List all persistent volume claims in the cluster
 kubectl create -f pvctest.yaml            # Create a persistent volume claim (PVC) from a YAML file. The -f option specifies the file to use.
@@ -908,6 +908,8 @@ NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE  
 standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  24h
 ```
 
+The value `WaitForFistCustomer` indicates that Kubernetes does not provision a volume until a Pod is scheduled that uses the PVC.
+
 #### Using KinD's Storage Provisioner
 
 Since the Rancher's auto-provisioner is the default `StorageClass`, any PVC requests that come in are seen by the provisioning pod, which then creates a `PersistentVolume` (PV) and `PersistentVolumeClaim` (PVC) for the request.
@@ -923,7 +925,7 @@ No resources found in default namespace.
 
 `PVC`s are namespaced objects, so you do need to specify the namespace when running `kubectl get pvc`. Since this is a new cluster and none of the default workloads require a persistent disk, there are currently no `PV`s or `PVC`s in the cluster.
 
-With an auto-provisioner, you need to create a `PV` before a `PVC` could claim the volume. With the Rancher auto-provisioner, you can test the creation process by deploying a pod with a PVC request.
+Without an auto-provisioner, you need to create a `PV` before a `PVC` could claim the volume. With the Rancher auto-provisioner, you can test the creation process by deploying a pod with a PVC request.
 
 ```yaml
 kind: PersistentVolumeClaim
@@ -935,21 +937,40 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1M
+      storage: 1Mi
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pvc-claim
+spec:
+  containers:
+  - name: test-pod
+    image: busybox
+    command:
+      - "/bin/sh"
+    args:
+      - "-c"
+      - "touch /mnt/test && exit 0 || exit 1"
+    volumeMounts:
+      - name: test-pvc
+        mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: test-pvc
+      persistentVolumeClaim:
+        claimName: test-claim
 ```
 
 The PVC will be named `test-claim` in the default namespace (since we didn't provide a namespace), and its volume is set at 1MB.
 
-You need to include the `StorageClass` option, since KinD has a default `StorageClass` for the cluster.
-
 ```bash
 kubectl create -f pvctest.yaml
 persistentvolumeclaim/test-claim created
+pod/test-pvc-claim createdd
 ```
 ```bash
-kubectl get pvc               
-NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
-test-claim   Pending                                      standard       <unset>                 106s
+ kubectl get pvc                
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+test-claim   Bound    pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            standard       <unset>                 20s
 ```
-
-At this point, the PVC object was successfully created
