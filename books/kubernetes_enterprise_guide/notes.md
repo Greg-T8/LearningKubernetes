@@ -20,6 +20,7 @@ docker ps -a              # Check container status
 # Kubernetes commands
 kubectl cluster-info
 kubectl get nodes
+kubectl describe nodes                    # Get detailed information about the nodes in the cluster, including resource usage
 kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
 kubectl describe csinode <node-name>      # Get detailed information about a specific CSI node
 kubectl get csidrivers                    # List all CSI drivers in the cluster
@@ -42,6 +43,11 @@ kind get clusters
 kubectl cluster-info
 kubectl get nodes
 docker ps -a
+
+# Performance monitoring 
+htop                                    # Interactive process viewer for Linux (not built-in)
+top                                     # Display Linux tasks (built-in)
+vmstat 1                                # Detailed memory and process stats every 1s
 ```
 
 <!-- omit in toc -->
@@ -99,6 +105,7 @@ docker ps -a
     - [Storage drivers](#storage-drivers)
     - [KinD storage classes](#kind-storage-classes)
     - [Using KinD's Storage Provisioner](#using-kinds-storage-provisioner)
+    - [Adding a custom load balancer for ingress](#adding-a-custom-load-balancer-for-ingress)
 
 
 ## 1. Docker and Container Essentials
@@ -974,3 +981,12 @@ pod/test-pvc-claim createdd
 NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 test-claim   Bound    pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            standard       <unset>                 20s
 ```
+```bash
+kubectl get pv  
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            Delete           Bound    default/test-claim   standard       <unset>                          78s
+```
+
+#### Adding a custom load balancer for ingress
+
+This section covers adding a custom HAProxy container that you can use to load balance worker nodes in a KinD cluster.
