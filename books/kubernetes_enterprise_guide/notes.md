@@ -105,6 +105,7 @@ vmstat 1                                # Detailed memory and process stats ever
     - [Storage drivers](#storage-drivers)
     - [KinD storage classes](#kind-storage-classes)
     - [Using KinD's Storage Provisioner](#using-kinds-storage-provisioner)
+  - [Troubleshooting the HAProxy Container](#troubleshooting-the-haproxy-container)
     - [Adding a custom load balancer for ingress](#adding-a-custom-load-balancer-for-ingress)
 
 
@@ -646,8 +647,8 @@ See:
 Result:
 
 ```bash
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain
+kind create cluster --name my-ha-cluster --config kind-multi-control-plane.yaml --retain
+
 Creating cluster "my-ha-cluster" ...
  ✓ Ensuring node image (kindest/node:v1.29.2) 🖼 
  ✓ Preparing nodes 📦 📦 📦 📦 📦  
@@ -669,15 +670,15 @@ Thanks for using kind! 😊
 Verify cluster status:
 
 ```bash
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% kubectl cluster-info --context kind-my-ha-cluster                                       
+kubectl cluster-info --context kind-my-ha-cluster       
+
 Kubernetes control plane is running at https://127.0.0.1:35387
 CoreDNS is running at https://127.0.0.1:35387/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% kubectl get nodes                                                                       
+kubectl get nodes         
+
 NAME                           STATUS   ROLES           AGE   VERSION
 my-ha-cluster-control-plane    Ready    control-plane   73s   v1.29.2
 my-ha-cluster-control-plane2   Ready    control-plane   42s   v1.29.2
@@ -686,8 +687,8 @@ my-ha-cluster-worker           Ready    <none>          19s   v1.29.2
 my-ha-cluster-worker2          Ready    <none>          20s   v1.29.2
 my-ha-cluster-worker3          Ready    <none>          20s   v1.29.2
 
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% docker ps -a 
+docker ps -a 
+
 CONTAINER ID   IMAGE                                COMMAND                  CREATED         STATUS         PORTS                       NAMES
 80c7dfd72313   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   2 minutes ago   Up 2 minutes   127.0.0.1:38835->6443/tcp   my-ha-cluster-external-load-balancer
 0d1aaa26fbd9   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   127.0.0.1:42513->6443/tcp   my-ha-cluster-control-plane
@@ -704,8 +705,8 @@ Given the use of a single host for KinD, each control plane and HAProxy must ope
 
 
 ```bash
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02 [main…]
-╰╴% cat ~/.kube/config
+cat ~/.kube/config
+
 apiVersion: v1
 clusters:
 - cluster:
@@ -730,8 +731,7 @@ When a command is executed using `kubectl`, it is sent directly to the HAProxy s
 You can verify access from the host:
 
 ```cmd
-╭─( ~
-╰╴> portqry -nr -n 127.0.0.1 -e 38835
+portqry -nr -n 127.0.0.1 -e 38835
 
 Querying target system called:
 
@@ -782,11 +782,11 @@ The author provides the following script to create a KinD cluster from a configu
 - [create-cluster.sh](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/create-cluster.sh)
 - [cluster01-kind.yaml](https://github.com/PacktPublishing/Kubernetes-An-Enterprise-Guide-Third-Edition/blob/main/chapter2/cluster01-kind.yaml)
 
-This script uses the following steps:
+This script performs the following steps:
 1. Downloads the KinD v 0.22.0 binary, makes it executable, and moves it to /usr/bin. 
 2. Downloads kubectl, make it executable, and moves it to /usr/bin. 
-3. Downloads the Helm installation script and executes it. 
-4. Installs jq. 
+3. Downloads the Helm installation script and executes it.  (Helm is a package manager for Kubernetes, similar to apt or yum for Linux distributions.)
+4. Installs jq.  (jq is a command-line JSON processor that allows you to parse and manipulate JSON data.)
 5. Executes KinD to create our cluster using the config file and declaring the image to use (we do this to avoid any issues with newer releases and our chapter scripts). 
 6. Labels the worker node for ingress. Uses the two manifests, custom-resources.yaml and tigera-operator.yaml, in the chapter2/calico to deploy Calico. 
 7. Deploys the NGINX Ingress using the nginx-deploy.yaml manifest in the chapter2/nginx-ingress directory.
@@ -807,21 +807,21 @@ chmod +x create-cluster.sh
 </details>
 
 ```bash
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
-╰╴% kubectl cluster-info
+kubectl cluster-info
+
 Kubernetes control plane is running at https://0.0.0.0:6443
 CoreDNS is running at https://0.0.0.0:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
-╰╴% kubectl get nodes   
+kubectl get nodes     
+
 NAME                      STATUS   ROLES           AGE     VERSION
 cluster01-control-plane   Ready    control-plane   9m31s   v1.30.0
 cluster01-worker          Ready    <none>          9m11s   v1.30.0
 
-╭─( ~/LearningKubernetes/books/kubernetes_enterprise_guide/ch02/scripted_cluster [main…]
-╰╴% docker ps -a 
+docker ps -a  
+
 CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS                                                              NAMES
 ff3895dee2d0   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:2379->2379/tcp, 0.0.0.0:6443->6443/tcp                     cluster01-control-plane
 ed014496997c   kindest/node:v1.30.0   "/usr/local/bin/entr…"   9 minutes ago   Up 9 minutes   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:2222->2222/tcp   cluster01-worker
@@ -977,7 +977,7 @@ persistentvolumeclaim/test-claim created
 pod/test-pvc-claim createdd
 ```
 ```bash
- kubectl get pvc                
+kubectl get pvc                
 NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 test-claim   Bound    pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            standard       <unset>                 20s
 ```
@@ -986,6 +986,59 @@ kubectl get pv
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
 pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            Delete           Bound    default/test-claim   standard       <unset>                          78s
 ```
+
+### Troubleshooting the HAProxy Container
+
+When coming back to the cluster after it being offline for a while, I found the state of the HAProxy container, `HAProxy-workers-lb`, was `Exited (255)`:
+
+```bash
+docker ps -a 
+
+CONTAINER ID   IMAGE                                COMMAND                  CREATED       STATUS                       PORTS                                                                                                                       NAMES
+76311af860e9   haproxy                              "docker-entrypoint.s…"   3 weeks ago   Exited (255) 6 minutes ago   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 0.0.0.0:8404->8404/tcp, [::]:8404->8404/tcp   HAProxy-workers-lb
+e9b3e475d156   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:44623->6443/tcp                                                                                                   multinode-control-plane
+43b6f4ffec76   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker3
+dd03b56f37c2   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   3 weeks ago   Up 6 minutes                 0.0.0.0:6443->6443/tcp                                                                                                      multinode-external-load-balancer
+4a8042de1a8f   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker2
+2a5af27cae63   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:36485->6443/tcp                                                                                                   multinode-control-plane3
+953ff5cc38a7   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker
+680a3ba60393   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:40387->6443/tcp                                                                                                   multinode-control-plane2
+```
+
+I started the HAProxy container:
+
+```bash
+docker start HAProxy-workers-lb 
+HAProxy-workers-lb
+```
+
+However, the Kubernetes API server was not reachable:
+
+```bash
+kubectl cluster-info
+E0804 05:45:37.565082   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
+E0804 05:45:47.586382   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
+E0804 05:45:57.604855   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
+E0804 05:46:05.146555   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
+E0804 05:46:15.163514   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
+```
+
+Verified Kubernetex context:
+```bash
+kubectl config current-context
+kind-multinode
+```
+
+
+
+
+
+
+
+
+
+
+
 
 #### Adding a custom load balancer for ingress
 
