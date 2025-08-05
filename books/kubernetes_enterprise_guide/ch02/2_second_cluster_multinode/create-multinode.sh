@@ -44,8 +44,8 @@ echo -e "\n \n******************************************************************
 echo -e "Install Calico from local file, using 10.240.0.0/16 as the pod CIDR"
 echo -e "*******************************************************************************************************************"
 tput setaf 3
-kubectl create -f ../calico/tigera-operator.yaml
-kubectl create -f ../calico/custom-resources.yaml
+kubectl create -f calico/tigera-operator.yaml
+kubectl create -f calico/custom-resources.yaml
 
 # Deploy NGINX
 # This is a standard nginx-deployment manifest that has been downloaded to the book repo to maintain compatibility with the KiND
@@ -55,7 +55,7 @@ echo -e "\n \n******************************************************************
 echo -e "Install NGINX Ingress Controller"
 echo -e "*******************************************************************************************************************"
 tput setaf 3
-kubectl create -f ../nginx-ingress/nginx-deploy.yaml
+kubectl create -f nginx-ingress/nginx-deploy.yaml
 
 # This will find the IP address for each of the worker nodes.  Note that the worker nodes must be named multinode-worker and
 # a number.
@@ -103,7 +103,7 @@ frontend workers_https
  mode tcp
  use_backend ingress_https
 backend ingress_https
- option ssl-hello-chk 
+ option ssl-hello-chk
  mode tcp
  server worker $worker1:443 check port 443
  server worker2 $worker2:443 check port 443
@@ -147,4 +147,3 @@ KIND_NETWORK=$(docker network ls | grep kind | awk '{print $1}')
 
 # Start the HAProxy Container for the Worker Nodes
 docker run --name HAProxy-workers-lb --network $KIND_NETWORK -d -p 8404:8404 -p 80:80 -p 443:443 -v ~/HAProxy:/usr/local/etc/HAProxy:ro haproxy -f /usr/local/etc/HAProxy/HAProxy.cfg
-

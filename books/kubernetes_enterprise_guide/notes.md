@@ -16,9 +16,14 @@
 ```bash
 # Docker commands
 docker ps -a              # Check container status
+docker network ls         # List all Docker networks
+docker volume ls          # List all Docker volumes
+docker images             # List all Docker images
 
 # Kubernetes commands
-kubectl cluster-info
+kubectl cluster-info                      # Get information, includingthe controle plane endpoint URL
+kubectl config get-contexts   
+cat ~/.kube/config                        # View the kubeconfig file, which contains cluster information             
 kubectl get nodes
 kubectl describe nodes                    # Get detailed information about the nodes in the cluster, including resource usage
 kubectl get csinodes                      # Check the status of the CSI (Container Storage Interface) nodes
@@ -423,6 +428,18 @@ This is impressive because normally, Docker containers are very lightweight and 
 
 KinD starts with a base image, which is an image the team has developed that contains everything required for Docker, Kubernetes, and `systemd`. This node image is based on a base `Ubuntu` image. 
 
+```bash
+% docker images                               
+REPOSITORY        TAG                  IMAGE ID       CREATED         SIZE
+haproxy           latest               04300dabcd29   3 weeks ago     107MB
+ubuntu            latest               a0e45e2ce6e6   3 months ago    78.1MB
+bitnami/nginx     latest               84586cbb6fca   3 months ago    185MB
+hello-world       latest               74cc54e27dc4   6 months ago    10.1kB
+kindest/node      <none>               9319cf209ac5   14 months ago   974MB         # The node image
+kindest/node      <none>               09c50567d34e   17 months ago   956MB
+kindest/haproxy   v20230606-42a2262b   914852332446   2 years ago     17.6MB
+```
+
 ### KinD and Docker networking
 
 KinD relies on Docker and Red Hat's `Podman` as the container engine to run cluster nodes. Clusters have the same networking constraints associated with Docker containers. These limitations may introduce complications when attempting to test containers from other machines on your network.
@@ -430,6 +447,15 @@ KinD relies on Docker and Red Hat's `Podman` as the container engine to run clus
 > `Podman` is an alternative that KinD now supports. It's an open-source offering that is meant to replace Docker as a runtime engine. It offers many advantages over Docker, such as enhanced security and not requiring a system daemon. However, it also adds complexity for people who are new to containers.
 
 When you install KinD on a Docker host, a new Docker bridge network is created, called `kind`. This bridge resolves issues with the default Docker bridge network. When running additional containers on the KinD network, you need to add `--net=kind` to the `docker run` command. 
+
+```bash
+% docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+b37eeffb31ba   bridge    bridge    local
+f80319ab11c3   host      host      local
+3e6c727e3df5   kind      bridge    local      # The KinD network
+7df9e365da52   none      null      local
+```
 
 Apart from Docker networking considerations, you must also consider the Kubernetes CNI (Container Network Interface). KinD supports multiple CNI interfaces, including KindNet, Calico, and Cilium. Officially, Kindnet is the only CNI they will support, but you do have the option to disable the default Kindnet installation, which will create a cluster without a CNI installed.
 
@@ -699,7 +725,7 @@ CONTAINER ID   IMAGE                                COMMAND                  CRE
 e6b28621e300   kindest/node:v1.29.2                 "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes                               my-ha-cluster-worker3 my-ha-cluster-control-plane2
 ```
 
-The [kubectl](./ch02/kind-multi-control-plane.yaml) config file can only target a single host or IP. To make this solution work, you need a load balancer in front of the control plane nodes. KinD considers this and create an additional container running a `HAProxy` load balancer (see above). However, note that `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
+The [kubectl](./ch02/2_second_cluster_multinode/multinode.yaml) config file can only target a single host or IP. To make this solution work, you need a load balancer in front of the control plane nodes. KinD considers this and create an additional container running a `HAProxy` load balancer (see above). However, note that `HAProxy` only load balances the control plane nodes. It does not load balance the worker nodes.
 
 Given the use of a single host for KinD, each control plane and HAProxy must operate on distinct ports. If you were to examine your Kubernetes configuration file, you would observe that it points to `https://127.0.0.1:38835`, representing the port assigned to the HAProxy container. **Note:** The author indicates the HAProxy server in the config file should be `https://0.0.0.0:38835`, but this was not the case in my observation.
 

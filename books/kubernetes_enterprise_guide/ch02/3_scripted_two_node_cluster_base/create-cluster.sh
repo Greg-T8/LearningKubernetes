@@ -1,5 +1,5 @@
 #!/bin/bash
-clear
+# clear
 
 # Most of the coding segments in the book have been removed to make room for additional technical contact.  Scripts will now
 # contain more documentation to help users understand what the scripts are executing.
