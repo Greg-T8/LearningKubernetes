@@ -15,11 +15,12 @@
 
 ```bash
 # Docker commands
-docker ps -a              # Check container status
-docker network ls         # List all Docker networks
-docker volume ls          # List all Docker volumes
-docker images             # List all Docker images
-
+docker ps -a                              # Check container status
+docker network ls                         # List all Docker networks
+docker volume ls                          # List all Docker volumes
+docker images                             # List all Docker images
+docker start $(docker ps -aq)             # Start all containers
+ 
 # Kubernetes commands
 kubectl cluster-info                      # Get information, includingthe controle plane endpoint URL
 kubectl config get-contexts   
