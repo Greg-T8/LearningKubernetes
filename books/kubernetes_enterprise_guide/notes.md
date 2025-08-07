@@ -20,6 +20,7 @@ docker network ls                         # List all Docker networks
 docker volume ls                          # List all Docker volumes
 docker images                             # List all Docker images
 docker start $(docker ps -aq)             # Start all containers
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Command}}' --no-trunc   # List containers with detailed information
  
 # Kubernetes commands
 kubectl cluster-info                      # Get information, includingthe controle plane endpoint URL
