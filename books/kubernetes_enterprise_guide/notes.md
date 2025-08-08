@@ -112,7 +112,6 @@ vmstat 1                                # Detailed memory and process stats ever
     - [Storage drivers](#storage-drivers)
     - [KinD storage classes](#kind-storage-classes)
     - [Using KinD's Storage Provisioner](#using-kinds-storage-provisioner)
-  - [Troubleshooting the HAProxy Container](#troubleshooting-the-haproxy-container)
     - [Adding a custom load balancer for ingress](#adding-a-custom-load-balancer-for-ingress)
 
 
@@ -1015,59 +1014,121 @@ NAME                                       CAPACITY   ACCESS MODES   RECLAIM POL
 pvc-738d130d-a97d-44f7-8991-548cfab1658c   1Mi        RWO            Delete           Bound    default/test-claim   standard       <unset>                          78s
 ```
 
-### Troubleshooting the HAProxy Container
-
-When coming back to the cluster after it being offline for a while, I found the state of the HAProxy container, `HAProxy-workers-lb`, was `Exited (255)`:
-
-```bash
-docker ps -a 
-
-CONTAINER ID   IMAGE                                COMMAND                  CREATED       STATUS                       PORTS                                                                                                                       NAMES
-76311af860e9   haproxy                              "docker-entrypoint.s…"   3 weeks ago   Exited (255) 6 minutes ago   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 0.0.0.0:8404->8404/tcp, [::]:8404->8404/tcp   HAProxy-workers-lb
-e9b3e475d156   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:44623->6443/tcp                                                                                                   multinode-control-plane
-43b6f4ffec76   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker3
-dd03b56f37c2   kindest/haproxy:v20230606-42a2262b   "haproxy -W -db -f /…"   3 weeks ago   Up 6 minutes                 0.0.0.0:6443->6443/tcp                                                                                                      multinode-external-load-balancer
-4a8042de1a8f   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker2
-2a5af27cae63   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:36485->6443/tcp                                                                                                   multinode-control-plane3
-953ff5cc38a7   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                                                                                                                                             multinode-worker
-680a3ba60393   kindest/node:v1.30.0                 "/usr/local/bin/entr…"   3 weeks ago   Up 6 minutes                 127.0.0.1:40387->6443/tcp                                                                                                   multinode-control-plane2
-```
-
-I started the HAProxy container:
-
-```bash
-docker start HAProxy-workers-lb 
-HAProxy-workers-lb
-```
-
-However, the Kubernetes API server was not reachable:
-
-```bash
-kubectl cluster-info
-E0804 05:45:37.565082   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
-E0804 05:45:47.586382   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
-E0804 05:45:57.604855   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
-E0804 05:46:05.146555   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
-E0804 05:46:15.163514   21535 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://0.0.0.0:6443/api?timeout=32s\": EOF"
-```
-
-Verified Kubernetex context:
-```bash
-kubectl config current-context
-kind-multinode
-```
-
-
-
-
-
-
-
-
-
-
-
-
 #### Adding a custom load balancer for ingress
 
-This section covers adding a custom HAProxy container that you can use to load balance worker nodes in a KinD cluster.
+This section covers the usage of adding an HAProxy load balancer as a front end that listens on ports 80 and 443.
+
+We start by creating the multinode cluster:
+
+[create-multinode.sh](ch02/2_multinode_cluster_with_load_balancer/create-multinode.sh)
+```bash
+% ./create-multinode.sh
+```
+```bash
+% docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Command}}' --no-trunc 
+NAMES                              STATUS         COMMAND
+HAProxy-workers-lb                 Up 8 minutes   "docker-entrypoint.sh -f /usr/local/etc/HAProxy/HAProxy.cfg"
+multinode-control-plane            Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-control-plane3           Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-worker2                  Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-control-plane2           Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-worker3                  Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-worker                   Up 9 minutes   "/usr/local/bin/entrypoint /sbin/init"
+multinode-external-load-balancer   Up 9 minutes   "haproxy -W -db -f /usr/local/etc/haproxy/haproxy.cfg"
+```
+
+The last line of the script runs the following command, which does the following:
+1. Creates a new container named `HAProxy-workers-lb` that runs the `haproxy` image.
+2. Creates a backend status page that runs on port 8404.
+3. Exposes ports 80 and 443 for HTTP and HTTPS traffic.
+4. Mounts the local directory `~/HAProxy` to `/usr/local/etc/HAProxy` in the container, which configures the service using `HAPRoxy.cfg`.
+
+```bash
+docker run --name HAProxy-workers-lb --network $KIND_NETWORK -d -p 8404:8404 -p 80:80 -p 443:443 -v ~/HAProxy:/usr/local/etc/HAProxy:ro haproxy -f /usr/local/etc/HAProxy/HAProxy.cf
+```
+
+The following block of code in *create-multinode.sh* creates the config file: 
+```bash
+tee ~/HAProxy/HAProxy.cfg <<EOF
+global
+ log /dev/log local0
+ log /dev/log local1 notice
+ daemon
+
+defaults
+ log global
+ mode tcp
+ timeout connect 5000
+ timeout client 50000
+ timeout server 50000
+
+frontend workers_https                            # tells HAProxy to bind on port 443 and use the backend traffic.
+ bind *:443
+ mode tcp
+ use_backend ingress_https
+
+backend ingress_https                             # configures backend servers with the IP addresses determined earlier in the script
+ option ssl-hello-chk
+ mode tcp
+ server worker $worker1:443 check port 443
+ server worker2 $worker2:443 check port 443
+ server worker3 $worker3:443 check port 443
+
+frontend stats                                    # Exposes the backend status page
+  bind *:8404
+  mode http
+  stats enable
+  stats uri /
+  stats refresh 10s
+
+frontend workers_http
+ bind *:80
+ use_backend ingress_http
+
+backend ingress_http
+ mode http
+ option httpchk GET /healthz
+ server worker $worker1:80 check port 80
+ server worker2 $worker2:80 check port 80
+ server worker3 $worker3:80 check port 80
+
+EOF
+```
+
+Here is a look at the backend status page. Notice how `worker2` is the active node.
+
+<img src='images/1754647785405.png' alt='HAProxy Backend Status Page' width='900'/> 
+
+Simulating a node failure by stopping the Kubernetes agent (pods continue to run on the node):
+
+```bash
+% docker exec multinode-worker2 systemctl stop kubelet
+```
+
+Check cluster status:
+
+```bash
+% kubectl get nodes
+NAME                       STATUS     ROLES           AGE   VERSION
+multinode-control-plane    Ready      control-plane   34m   v1.30.0
+multinode-control-plane2   Ready      control-plane   34m   v1.30.0
+multinode-control-plane3   Ready      control-plane   34m   v1.30.0
+multinode-worker           Ready      <none>          33m   v1.30.0
+multinode-worker2          NotReady   <none>          33m   v1.30.0         # Note worker2 is now down
+multinode-worker3          Ready      <none>          33m   v1.30.0
+```
+
+Since the node is down, we cannot restart the pod on that node. So, we delete the pod so that `kube-scheduler` can reschedule it on a different node.
+
+```bash
+% kubectl get pods -n ingress-nginx           # The -n option limits the query to the namespace "ingress-nginx"
+NAME                                        READY   STATUS    RESTARTS   AGE
+ingress-nginx-controller-59646cdb49-2v6k4   1/1     Running   0          5m59s
+
+% kubectl delete pod ingress-nginx-controller-59646cdb49-2v6k4 -n ingress-nginx 
+pod "ingress-nginx-controller-59646cdb49-2v6k4" deleted
+```
+
+We now see that the active node has changed to **worker1**:
+
+<img src='images/1754648702181.png' alt='HAProxy Backend Status Page' width='900'/>
